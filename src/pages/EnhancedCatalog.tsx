@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { Search, Filter } from "lucide-react";
+import { Search, Filter, BookmarkPlus } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -8,6 +8,8 @@ import { Button } from "@/components/ui/button";
 import Header from "@/components/Header";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
+import { AddToCollectionDialog } from "@/components/AddToCollectionDialog";
 
 interface Movie {
   id: string;
@@ -22,6 +24,8 @@ const EnhancedCatalog = () => {
   const [movies, setMovies] = useState<Movie[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedMovie, setSelectedMovie] = useState<{ id: string; title: string } | null>(null);
+  const { user } = useAuth();
   const { toast } = useToast();
 
   useEffect(() => {
@@ -105,8 +109,8 @@ const EnhancedCatalog = () => {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {filteredMovies.map((movie) => (
-              <Link key={movie.id} to={`/movie/${movie.id}`}>
-                <Card className="group overflow-hidden hover:shadow-glow transition-all duration-300 border-border bg-card h-full">
+              <Card key={movie.id} className="group overflow-hidden hover:shadow-glow transition-all duration-300 border-border bg-card h-full">
+                <Link to={`/movie/${movie.id}`}>
                   <div className="relative aspect-[2/3] overflow-hidden">
                     <img
                       src={movie.poster_url || "https://images.unsplash.com/photo-1485846234645-a62644f84728?w=400&h=600&fit=crop"}
@@ -115,32 +119,57 @@ const EnhancedCatalog = () => {
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-background via-background/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                   </div>
-                  <CardContent className="p-4">
-                    <h3 className="font-bold text-lg mb-1 line-clamp-1">{movie.title}</h3>
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm text-muted-foreground">{movie.year}</span>
-                      {movie.genres && movie.genres.length > 0 && (
-                        <Badge variant="secondary">{movie.genres[0]}</Badge>
-                      )}
-                    </div>
-                    {movie.rating && (
-                      <div className="flex items-center gap-2">
-                        <div className="flex-1 h-2 bg-secondary rounded-full overflow-hidden">
-                          <div
-                            className="h-full bg-gradient-emotion-warm rounded-full"
-                            style={{ width: `${(movie.rating / 10) * 100}%` }}
-                          />
-                        </div>
-                        <span className="text-sm font-semibold text-primary">{movie.rating.toFixed(1)}</span>
-                      </div>
+                </Link>
+                <CardContent className="p-4">
+                  <Link to={`/movie/${movie.id}`}>
+                    <h3 className="font-bold text-lg mb-1 line-clamp-1 hover:text-primary transition-colors">{movie.title}</h3>
+                  </Link>
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm text-muted-foreground">{movie.year}</span>
+                    {movie.genres && movie.genres.length > 0 && (
+                      <Badge variant="secondary">{movie.genres[0]}</Badge>
                     )}
-                  </CardContent>
-                </Card>
-              </Link>
+                  </div>
+                  {movie.rating && (
+                    <div className="flex items-center gap-2 mb-3">
+                      <div className="flex-1 h-2 bg-secondary rounded-full overflow-hidden">
+                        <div
+                          className="h-full bg-gradient-emotion-warm rounded-full"
+                          style={{ width: `${(movie.rating / 10) * 100}%` }}
+                        />
+                      </div>
+                      <span className="text-sm font-semibold text-primary">{movie.rating.toFixed(1)}</span>
+                    </div>
+                  )}
+                  {user && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="w-full"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        setSelectedMovie({ id: movie.id, title: movie.title });
+                      }}
+                    >
+                      <BookmarkPlus className="h-4 w-4 mr-2" />
+                      Add to Collection
+                    </Button>
+                  )}
+                </CardContent>
+              </Card>
             ))}
           </div>
         )}
       </main>
+
+      {selectedMovie && (
+        <AddToCollectionDialog
+          open={!!selectedMovie}
+          onOpenChange={(open) => !open && setSelectedMovie(null)}
+          movieId={selectedMovie.id}
+          movieTitle={selectedMovie.title}
+        />
+      )}
     </div>
   );
 };

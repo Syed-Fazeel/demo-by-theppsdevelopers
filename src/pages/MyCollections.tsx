@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { Plus, Trash2, Eye, EyeOff } from "lucide-react";
+import { Plus, Trash2, Eye, EyeOff, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -129,6 +129,31 @@ const MyCollections = () => {
     }
   };
 
+  const handleRemoveFromCollection = async (collectionItemId: string, collectionId: string) => {
+    try {
+      const { error } = await supabase
+        .from('collection_items')
+        .delete()
+        .eq('id', collectionItemId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Removed",
+        description: "Movie removed from collection",
+      });
+
+      fetchCollections();
+    } catch (error: any) {
+      console.error('Error removing movie:', error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to remove movie",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <ProtectedRoute>
       <div className="min-h-screen bg-background">
@@ -244,25 +269,44 @@ const MyCollections = () => {
                       <span>{collection.collection_items?.length || 0} movies</span>
                     </div>
 
-                    {collection.collection_items && collection.collection_items.length > 0 && (
-                      <div className="grid grid-cols-3 gap-2 mb-4">
-                        {collection.collection_items.slice(0, 3).map((item: any) => (
-                          <div key={item.id} className="aspect-[2/3] rounded overflow-hidden">
+                    {collection.collection_items && collection.collection_items.length > 0 ? (
+                      <div className="space-y-2 mb-4">
+                        {collection.collection_items.map((item: any) => (
+                          <div key={item.id} className="flex items-center gap-3 p-2 rounded-lg bg-background/50 hover:bg-background transition-colors">
                             <img
-                              src={item.movies?.poster_url || "https://images.unsplash.com/photo-1485846234645-a62644f84728?w=200&h=300&fit=crop"}
+                              src={item.movies?.poster_url || "https://images.unsplash.com/photo-1485846234645-a62644f84728?w=80&h=120&fit=crop"}
                               alt={item.movies?.title}
-                              className="w-full h-full object-cover"
+                              className="w-12 h-18 object-cover rounded"
                             />
+                            <div className="flex-1 min-w-0">
+                              <p className="font-medium truncate">{item.movies?.title}</p>
+                            </div>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleRemoveFromCollection(item.id, collection.id)}
+                            >
+                              <X className="h-4 w-4" />
+                            </Button>
                           </div>
                         ))}
                       </div>
+                    ) : (
+                      <p className="text-sm text-muted-foreground mb-4">No movies in this collection yet</p>
                     )}
 
-                    <Button variant="outline" className="w-full" asChild>
-                      <Link to={`/collection/${collection.id}`}>
-                        View Collection
-                      </Link>
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button variant="outline" className="flex-1" asChild>
+                        <Link to="/catalog">
+                          Browse Movies
+                        </Link>
+                      </Button>
+                      <Button variant="outline" className="flex-1" asChild>
+                        <Link to="/add-movies">
+                          Search TMDb
+                        </Link>
+                      </Button>
+                    </div>
                   </CardContent>
                 </Card>
               ))}
