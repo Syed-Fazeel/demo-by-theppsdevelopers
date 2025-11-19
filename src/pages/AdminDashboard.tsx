@@ -9,6 +9,7 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+import { TMDbImport } from "@/components/TMDbImport";
 
 const AdminDashboard = () => {
   const { user } = useAuth();
@@ -166,6 +167,7 @@ const AdminDashboard = () => {
               <TabsTrigger value="users">User Management</TabsTrigger>
               <TabsTrigger value="movies">Movie Management</TabsTrigger>
               <TabsTrigger value="analytics">Analytics</TabsTrigger>
+              <TabsTrigger value="import">Import Movies</TabsTrigger>
             </TabsList>
 
             <TabsContent value="moderation" className="space-y-4">
@@ -256,6 +258,10 @@ const AdminDashboard = () => {
                   <p className="text-muted-foreground">Analytics dashboard coming soon...</p>
                 </CardContent>
               </Card>
+            </TabsContent>
+
+            <TabsContent value="import">
+              <TMDbImport />
             </TabsContent>
           </Tabs>
         </main>
