@@ -2,26 +2,12 @@ import { Film, TrendingUp, Users, BarChart3 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import Header from "@/components/Header";
 
 const Index = () => {
   return (
     <div className="min-h-screen bg-gradient-hero">
-      <header className="border-b border-border bg-card/30 backdrop-blur-lg sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-2 text-2xl font-bold text-primary">
-            <Film className="h-8 w-8" />
-            <span>Movie Emotion Tracker</span>
-          </div>
-          <nav className="hidden md:flex gap-6">
-            <Link to="/catalog" className="text-foreground hover:text-primary transition-colors">
-              Catalog
-            </Link>
-            <Link to="#" className="text-muted-foreground hover:text-foreground transition-colors">
-              About
-            </Link>
-          </nav>
-        </div>
-      </header>
+      <Header />
 
       <main>
         <section className="container mx-auto px-4 py-24">
