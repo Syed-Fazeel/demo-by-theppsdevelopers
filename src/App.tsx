@@ -10,6 +10,7 @@ import Auth from "./pages/Auth";
 import ManualReview from "./pages/ManualReview";
 import LiveReaction from "./pages/LiveReaction";
 import MyCollections from "./pages/MyCollections";
+import AddMovies from "./pages/AddMovies";
 import Profile from "./pages/Profile";
 import AdminDashboard from "./pages/AdminDashboard";
 import NotFound from "./pages/NotFound";
@@ -30,6 +31,7 @@ const App = () => (
           <Route path="/review/:id" element={<ManualReview />} />
           <Route path="/live-reaction/:id" element={<LiveReaction />} />
           <Route path="/my-collections" element={<MyCollections />} />
+          <Route path="/add-movies" element={<AddMovies />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/admin" element={<AdminDashboard />} />
           <Route path="/settings" element={<Profile />} />

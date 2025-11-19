@@ -1,4 +1,4 @@
-import { Film, User, LogOut, Heart, Settings, LayoutDashboard } from "lucide-react";
+import { Film, User, LogOut, Heart, Settings, LayoutDashboard, Plus } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "./ui/button";
 import {
@@ -11,11 +11,33 @@ import {
 } from "./ui/dropdown-menu";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 const Header = () => {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    if (user) {
+      checkAdminRole(user.id);
+    } else {
+      setIsAdmin(false);
+    }
+  }, [user]);
+
+  const checkAdminRole = async (userId: string) => {
+    const { data } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", userId)
+      .in("role", ["admin", "moderator"])
+      .single();
+    
+    setIsAdmin(!!data);
+  };
 
   const handleSignOut = async () => {
     await signOut();
@@ -43,6 +65,9 @@ const Header = () => {
             
             {user ? (
               <>
+                <Link to="/add-movies" className="text-foreground hover:text-primary transition-colors hidden md:inline">
+                  Add Movies
+                </Link>
                 <Link to="/my-collections" className="text-foreground hover:text-primary transition-colors hidden md:inline">
                   Collections
                 </Link>
@@ -60,14 +85,20 @@ const Header = () => {
                       <User className="mr-2 h-4 w-4" />
                       Profile
                     </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => navigate("/add-movies")}>
+                      <Plus className="mr-2 h-4 w-4" />
+                      Add Movies
+                    </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => navigate("/my-collections")}>
                       <Heart className="mr-2 h-4 w-4" />
                       My Collections
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => navigate("/admin")}>
-                      <LayoutDashboard className="mr-2 h-4 w-4" />
-                      Admin Dashboard
-                    </DropdownMenuItem>
+                    {isAdmin && (
+                      <DropdownMenuItem onClick={() => navigate("/admin")}>
+                        <LayoutDashboard className="mr-2 h-4 w-4" />
+                        Admin Dashboard
+                      </DropdownMenuItem>
+                    )}
                     <DropdownMenuItem onClick={() => navigate("/settings")}>
                       <Settings className="mr-2 h-4 w-4" />
                       Settings

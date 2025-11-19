@@ -75,7 +75,7 @@ export const useTMDb = () => {
     }
   };
 
-  const importMovieToDatabase = async (tmdbId: number) => {
+  const importMovieToDatabase = async (tmdbId: number): Promise<string | null> => {
     try {
       const movieData = await fetchMovieDetails(tmdbId);
       
@@ -83,7 +83,7 @@ export const useTMDb = () => {
         throw new Error('Failed to fetch movie data');
       }
 
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('movies')
         .insert({
           tmdb_id: movieData.tmdb_id,
@@ -98,7 +98,9 @@ export const useTMDb = () => {
           director: movieData.director,
           trailer_url: movieData.trailer_url,
           rating: movieData.rating,
-        });
+        })
+        .select()
+        .single();
 
       if (error) throw error;
 
@@ -107,7 +109,7 @@ export const useTMDb = () => {
         description: `${movieData.title} has been added to the database`,
       });
 
-      return true;
+      return data.id;
     } catch (error) {
       console.error('Error importing movie:', error);
       toast({
@@ -115,7 +117,7 @@ export const useTMDb = () => {
         description: error instanceof Error ? error.message : "Failed to import movie",
         variant: "destructive",
       });
-      return false;
+      return null;
     }
   };
 
