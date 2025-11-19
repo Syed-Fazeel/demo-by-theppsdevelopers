@@ -14,16 +14,599 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      collection_items: {
+        Row: {
+          added_at: string
+          collection_id: string
+          graph_id: string | null
+          id: string
+          movie_id: string
+        }
+        Insert: {
+          added_at?: string
+          collection_id: string
+          graph_id?: string | null
+          id?: string
+          movie_id: string
+        }
+        Update: {
+          added_at?: string
+          collection_id?: string
+          graph_id?: string | null
+          id?: string
+          movie_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "collection_items_collection_id_fkey"
+            columns: ["collection_id"]
+            isOneToOne: false
+            referencedRelation: "collections"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "collection_items_graph_id_fkey"
+            columns: ["graph_id"]
+            isOneToOne: false
+            referencedRelation: "emotion_graphs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "collection_items_movie_id_fkey"
+            columns: ["movie_id"]
+            isOneToOne: false
+            referencedRelation: "movies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      collections: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          is_public: boolean | null
+          name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_public?: boolean | null
+          name: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_public?: boolean | null
+          name?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "collections_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      comments: {
+        Row: {
+          content: string
+          created_at: string
+          graph_id: string | null
+          id: string
+          moderation_status:
+            | Database["public"]["Enums"]["moderation_status"]
+            | null
+          review_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          graph_id?: string | null
+          id?: string
+          moderation_status?:
+            | Database["public"]["Enums"]["moderation_status"]
+            | null
+          review_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          graph_id?: string | null
+          id?: string
+          moderation_status?:
+            | Database["public"]["Enums"]["moderation_status"]
+            | null
+          review_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "comments_graph_id_fkey"
+            columns: ["graph_id"]
+            isOneToOne: false
+            referencedRelation: "emotion_graphs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "comments_review_id_fkey"
+            columns: ["review_id"]
+            isOneToOne: false
+            referencedRelation: "manual_reviews"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "comments_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      emotion_graphs: {
+        Row: {
+          created_at: string
+          graph_data: Json
+          id: string
+          is_public: boolean | null
+          moderation_status:
+            | Database["public"]["Enums"]["moderation_status"]
+            | null
+          movie_id: string
+          source_type: Database["public"]["Enums"]["graph_source_type"]
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          graph_data: Json
+          id?: string
+          is_public?: boolean | null
+          moderation_status?:
+            | Database["public"]["Enums"]["moderation_status"]
+            | null
+          movie_id: string
+          source_type: Database["public"]["Enums"]["graph_source_type"]
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          graph_data?: Json
+          id?: string
+          is_public?: boolean | null
+          moderation_status?:
+            | Database["public"]["Enums"]["moderation_status"]
+            | null
+          movie_id?: string
+          source_type?: Database["public"]["Enums"]["graph_source_type"]
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "emotion_graphs_movie_id_fkey"
+            columns: ["movie_id"]
+            isOneToOne: false
+            referencedRelation: "movies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "emotion_graphs_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      followers: {
+        Row: {
+          created_at: string
+          follower_id: string
+          following_id: string
+          id: string
+        }
+        Insert: {
+          created_at?: string
+          follower_id: string
+          following_id: string
+          id?: string
+        }
+        Update: {
+          created_at?: string
+          follower_id?: string
+          following_id?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "followers_follower_id_fkey"
+            columns: ["follower_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "followers_following_id_fkey"
+            columns: ["following_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      likes: {
+        Row: {
+          created_at: string
+          graph_id: string | null
+          id: string
+          review_id: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          graph_id?: string | null
+          id?: string
+          review_id?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          graph_id?: string | null
+          id?: string
+          review_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "likes_graph_id_fkey"
+            columns: ["graph_id"]
+            isOneToOne: false
+            referencedRelation: "emotion_graphs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "likes_review_id_fkey"
+            columns: ["review_id"]
+            isOneToOne: false
+            referencedRelation: "manual_reviews"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "likes_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      live_reaction_sessions: {
+        Row: {
+          completed_at: string | null
+          graph_id: string | null
+          id: string
+          is_completed: boolean | null
+          movie_id: string
+          session_data: Json
+          started_at: string
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          graph_id?: string | null
+          id?: string
+          is_completed?: boolean | null
+          movie_id: string
+          session_data?: Json
+          started_at?: string
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          graph_id?: string | null
+          id?: string
+          is_completed?: boolean | null
+          movie_id?: string
+          session_data?: Json
+          started_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "live_reaction_sessions_graph_id_fkey"
+            columns: ["graph_id"]
+            isOneToOne: false
+            referencedRelation: "emotion_graphs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "live_reaction_sessions_movie_id_fkey"
+            columns: ["movie_id"]
+            isOneToOne: false
+            referencedRelation: "movies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "live_reaction_sessions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      manual_reviews: {
+        Row: {
+          created_at: string
+          graph_id: string | null
+          id: string
+          is_public: boolean | null
+          moderation_status:
+            | Database["public"]["Enums"]["moderation_status"]
+            | null
+          movie_id: string
+          overall_rating: number | null
+          review_text: string | null
+          section_ratings: Json
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          graph_id?: string | null
+          id?: string
+          is_public?: boolean | null
+          moderation_status?:
+            | Database["public"]["Enums"]["moderation_status"]
+            | null
+          movie_id: string
+          overall_rating?: number | null
+          review_text?: string | null
+          section_ratings: Json
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          graph_id?: string | null
+          id?: string
+          is_public?: boolean | null
+          moderation_status?:
+            | Database["public"]["Enums"]["moderation_status"]
+            | null
+          movie_id?: string
+          overall_rating?: number | null
+          review_text?: string | null
+          section_ratings?: Json
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "manual_reviews_graph_id_fkey"
+            columns: ["graph_id"]
+            isOneToOne: false
+            referencedRelation: "emotion_graphs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "manual_reviews_movie_id_fkey"
+            columns: ["movie_id"]
+            isOneToOne: false
+            referencedRelation: "movies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "manual_reviews_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      movies: {
+        Row: {
+          backdrop_url: string | null
+          cast_members: string[] | null
+          created_at: string
+          director: string | null
+          genres: string[] | null
+          id: string
+          poster_url: string | null
+          rating: number | null
+          runtime: number | null
+          synopsis: string | null
+          title: string
+          tmdb_id: number | null
+          trailer_url: string | null
+          updated_at: string
+          year: number | null
+        }
+        Insert: {
+          backdrop_url?: string | null
+          cast_members?: string[] | null
+          created_at?: string
+          director?: string | null
+          genres?: string[] | null
+          id?: string
+          poster_url?: string | null
+          rating?: number | null
+          runtime?: number | null
+          synopsis?: string | null
+          title: string
+          tmdb_id?: number | null
+          trailer_url?: string | null
+          updated_at?: string
+          year?: number | null
+        }
+        Update: {
+          backdrop_url?: string | null
+          cast_members?: string[] | null
+          created_at?: string
+          director?: string | null
+          genres?: string[] | null
+          id?: string
+          poster_url?: string | null
+          rating?: number | null
+          runtime?: number | null
+          synopsis?: string | null
+          title?: string
+          tmdb_id?: number | null
+          trailer_url?: string | null
+          updated_at?: string
+          year?: number | null
+        }
+        Relationships: []
+      }
+      notifications: {
+        Row: {
+          created_at: string
+          id: string
+          is_read: boolean | null
+          link_url: string | null
+          message: string
+          title: string
+          type: Database["public"]["Enums"]["notification_type"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_read?: boolean | null
+          link_url?: string | null
+          message: string
+          title: string
+          type: Database["public"]["Enums"]["notification_type"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_read?: boolean | null
+          link_url?: string | null
+          message?: string
+          title?: string
+          type?: Database["public"]["Enums"]["notification_type"]
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notifications_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          bio: string | null
+          created_at: string
+          display_name: string | null
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string
+          display_name?: string | null
+          id: string
+          updated_at?: string
+        }
+        Update: {
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_roles_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "moderator" | "user"
+      graph_source_type:
+        | "nlp_analysis"
+        | "live_reaction"
+        | "manual_review"
+        | "consensus"
+      moderation_status: "pending" | "approved" | "rejected"
+      notification_type:
+        | "follow"
+        | "like"
+        | "comment"
+        | "collection_share"
+        | "moderation"
+      review_section:
+        | "opening"
+        | "rising_action"
+        | "climax"
+        | "falling_action"
+        | "resolution"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +733,29 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "moderator", "user"],
+      graph_source_type: [
+        "nlp_analysis",
+        "live_reaction",
+        "manual_review",
+        "consensus",
+      ],
+      moderation_status: ["pending", "approved", "rejected"],
+      notification_type: [
+        "follow",
+        "like",
+        "comment",
+        "collection_share",
+        "moderation",
+      ],
+      review_section: [
+        "opening",
+        "rising_action",
+        "climax",
+        "falling_action",
+        "resolution",
+      ],
+    },
   },
 } as const
