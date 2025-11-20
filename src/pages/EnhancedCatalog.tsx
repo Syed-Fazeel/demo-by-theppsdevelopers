@@ -1,18 +1,16 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { Search, BookmarkPlus, Globe } from "lucide-react";
+import { Search, BookmarkPlus } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Header from "@/components/Header";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { AddToCollectionDialog } from "@/components/AddToCollectionDialog";
 import { MovieFilters, FilterState } from "@/components/MovieFilters";
-import { TMDbImport } from "@/components/TMDbImport";
 import {
   Select,
   SelectContent,
@@ -139,23 +137,9 @@ const EnhancedCatalog = () => {
       <main className="container mx-auto px-4 py-12">
         <div className="mb-8">
           <h1 className="text-4xl font-bold mb-2">Movie Catalog</h1>
-          <p className="text-muted-foreground mb-6">Browse our database or search online for any movie</p>
-        </div>
-
-        <Tabs defaultValue="database" className="space-y-6">
-          <TabsList className="grid w-full max-w-md grid-cols-2">
-            <TabsTrigger value="database" className="gap-2">
-              <Search className="h-4 w-4" />
-              Database
-            </TabsTrigger>
-            <TabsTrigger value="online" className="gap-2">
-              <Globe className="h-4 w-4" />
-              Search Online
-            </TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="database" className="space-y-6">
-            <div className="flex flex-col sm:flex-row gap-4">
+          <p className="text-muted-foreground mb-6">Explore emotion timelines for your favorite films</p>
+          
+          <div className="flex flex-col sm:flex-row gap-4">
               <div className="relative flex-1 max-w-2xl">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-5 w-5" />
                 <Input
@@ -193,24 +177,25 @@ const EnhancedCatalog = () => {
                 Showing {filteredMovies.length} of {movies.length} movies
               </div>
             )}
+          </div>
 
-            {filteredMovies.length === 0 ? (
-              <div className="text-center py-16">
-                <Search className="h-16 w-16 mx-auto mb-4 text-muted-foreground/50" />
-                <p className="text-muted-foreground text-lg mb-2">No movies found</p>
-                <p className="text-muted-foreground mb-4">
-                  {searchTerm 
-                    ? `No results for "${searchTerm}"`
-                    : "Try adjusting your filters"}
-                </p>
-                {searchTerm && (
-                  <Button variant="outline" onClick={() => setSearchTerm("")}>
-                    Clear Search
-                  </Button>
-                )}
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {filteredMovies.length === 0 ? (
+          <div className="text-center py-16">
+            <Search className="h-16 w-16 mx-auto mb-4 text-muted-foreground/50" />
+            <p className="text-muted-foreground text-lg mb-2">No movies found</p>
+            <p className="text-muted-foreground mb-4">
+              {searchTerm 
+                ? `No results for "${searchTerm}"`
+                : "Try adjusting your filters"}
+            </p>
+            {searchTerm && (
+              <Button variant="outline" onClick={() => setSearchTerm("")}>
+                Clear Search
+              </Button>
+            )}
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {filteredMovies.map((movie) => (
               <Card key={movie.id} className="group overflow-hidden hover:shadow-glow transition-all duration-300 border-border bg-card h-full">
                 <Link to={`/movie/${movie.id}`}>
@@ -263,12 +248,6 @@ const EnhancedCatalog = () => {
             ))}
           </div>
         )}
-          </TabsContent>
-
-          <TabsContent value="online">
-            <TMDbImport />
-          </TabsContent>
-        </Tabs>
       </main>
 
       {selectedMovie && (
