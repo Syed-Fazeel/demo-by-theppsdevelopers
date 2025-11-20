@@ -125,25 +125,32 @@ const LiveReaction = () => {
     if (!user || !id || !sessionId) return;
 
     try {
-      // Update session as completed
-      await supabase
-        .from('live_reaction_sessions')
-        .update({
-          session_data: sessionData,
-          completed_at: new Date().toISOString(),
-          is_completed: true,
-        })
-        .eq('id', sessionId);
-
-      // Create emotion graph
-      await supabase
+      // Create emotion graph from session data
+      const { data: graphData, error: graphError } = await supabase
         .from('emotion_graphs')
         .insert({
           movie_id: id,
           user_id: user.id,
           source_type: 'live_reaction',
           graph_data: sessionData,
-        });
+          is_public: true,
+          moderation_status: 'approved',
+        })
+        .select()
+        .single();
+
+      if (graphError) throw graphError;
+
+      // Update session as completed and link to graph
+      await supabase
+        .from('live_reaction_sessions')
+        .update({
+          session_data: sessionData,
+          completed_at: new Date().toISOString(),
+          is_completed: true,
+          graph_id: graphData.id,
+        })
+        .eq('id', sessionId);
 
       toast({
         title: "Session Complete!",

@@ -65,9 +65,6 @@ const Header = () => {
             
             {user ? (
               <>
-                <Link to="/add-movies" className="text-foreground hover:text-primary transition-colors hidden md:inline">
-                  Add Movies
-                </Link>
                 <Link to="/my-collections" className="text-foreground hover:text-primary transition-colors hidden md:inline">
                   Collections
                 </Link>
@@ -84,10 +81,6 @@ const Header = () => {
                     <DropdownMenuItem onClick={() => navigate("/profile")}>
                       <User className="mr-2 h-4 w-4" />
                       Profile
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => navigate("/add-movies")}>
-                      <Plus className="mr-2 h-4 w-4" />
-                      Add Movies
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => navigate("/my-collections")}>
                       <Heart className="mr-2 h-4 w-4" />

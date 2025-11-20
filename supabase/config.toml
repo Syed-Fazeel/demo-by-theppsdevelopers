@@ -2,3 +2,9 @@ project_id = "mdyvrjbhxbsbnszqfjih"
 
 [functions.fetch-tmdb-movie]
 verify_jwt = false
+
+[functions.aggregate-emotion-graphs]
+verify_jwt = false
+
+[functions.process-nlp-reviews]
+verify_jwt = false

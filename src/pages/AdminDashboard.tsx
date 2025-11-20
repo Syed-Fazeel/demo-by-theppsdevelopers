@@ -4,6 +4,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import Header from "@/components/Header";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { supabase } from "@/integrations/supabase/client";
@@ -22,10 +26,19 @@ const AdminDashboard = () => {
   });
   const [pendingContent, setPendingContent] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [movies, setMovies] = useState<any[]>([]);
+  const [nlpForm, setNlpForm] = useState({
+    movieId: '',
+    reviewText: '',
+    runtime: '',
+  });
+  const [processingNlp, setProcessingNlp] = useState(false);
+  const [aggregating, setAggregating] = useState(false);
 
   useEffect(() => {
     if (user) {
       fetchDashboardData();
+      fetchMovies();
     }
   }, [user]);
 
@@ -58,6 +71,112 @@ const AdminDashboard = () => {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchMovies = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('movies')
+        .select('id, title, runtime')
+        .order('title');
+      
+      if (error) throw error;
+      setMovies(data || []);
+    } catch (error) {
+      console.error('Error fetching movies:', error);
+    }
+  };
+
+  const handleProcessNlp = async () => {
+    if (!nlpForm.movieId || !nlpForm.reviewText || !nlpForm.runtime) {
+      toast({
+        title: "Missing Fields",
+        description: "Please fill in all fields",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setProcessingNlp(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('process-nlp-reviews', {
+        body: {
+          movieId: nlpForm.movieId,
+          reviewText: nlpForm.reviewText,
+          runtime: parseInt(nlpForm.runtime),
+        },
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Success!",
+        description: `NLP graph created with ${data.dataPoints} data points`,
+      });
+
+      setNlpForm({ movieId: '', reviewText: '', runtime: '' });
+    } catch (error: any) {
+      console.error('Error processing NLP:', error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to process review",
+        variant: "destructive",
+      });
+    } finally {
+      setProcessingNlp(false);
+    }
+  };
+
+  const handleAggregateGraphs = async (movieId?: string) => {
+    setAggregating(true);
+    try {
+      if (movieId) {
+        // Aggregate specific movie
+        const { data, error } = await supabase.functions.invoke('aggregate-emotion-graphs', {
+          body: { movieId },
+        });
+
+        if (error) throw error;
+
+        toast({
+          title: "Success!",
+          description: `Aggregated ${data.graphsUsed} graphs into ${data.pointsAggregated} data points`,
+        });
+      } else {
+        // Aggregate all movies
+        const { data: allMovies } = await supabase
+          .from('movies')
+          .select('id');
+
+        if (!allMovies) throw new Error('No movies found');
+
+        let successCount = 0;
+        for (const movie of allMovies) {
+          try {
+            await supabase.functions.invoke('aggregate-emotion-graphs', {
+              body: { movieId: movie.id },
+            });
+            successCount++;
+          } catch (error) {
+            console.error(`Failed to aggregate movie ${movie.id}:`, error);
+          }
+        }
+
+        toast({
+          title: "Batch Complete!",
+          description: `Successfully aggregated ${successCount} of ${allMovies.length} movies`,
+        });
+      }
+    } catch (error: any) {
+      console.error('Error aggregating graphs:', error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to aggregate graphs",
+        variant: "destructive",
+      });
+    } finally {
+      setAggregating(false);
     }
   };
 
@@ -164,6 +283,7 @@ const AdminDashboard = () => {
           <Tabs defaultValue="moderation" className="space-y-4">
             <TabsList>
               <TabsTrigger value="moderation">Content Moderation</TabsTrigger>
+              <TabsTrigger value="graphs">Graph Processing</TabsTrigger>
               <TabsTrigger value="users">User Management</TabsTrigger>
               <TabsTrigger value="movies">Movie Management</TabsTrigger>
               <TabsTrigger value="analytics">Analytics</TabsTrigger>
@@ -225,6 +345,124 @@ const AdminDashboard = () => {
                   )}
                 </CardContent>
               </Card>
+            </TabsContent>
+
+            <TabsContent value="graphs" className="space-y-4">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <Card className="border-border bg-card">
+                  <CardHeader>
+                    <CardTitle>Process NLP Review</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="movie-select">Select Movie</Label>
+                      <Select 
+                        value={nlpForm.movieId} 
+                        onValueChange={(value) => {
+                          setNlpForm(prev => ({ ...prev, movieId: value }));
+                          const movie = movies.find(m => m.id === value);
+                          if (movie?.runtime) {
+                            setNlpForm(prev => ({ ...prev, runtime: movie.runtime.toString() }));
+                          }
+                        }}
+                      >
+                        <SelectTrigger id="movie-select">
+                          <SelectValue placeholder="Choose a movie" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {movies.map(movie => (
+                            <SelectItem key={movie.id} value={movie.id}>
+                              {movie.title} {movie.runtime ? `(${movie.runtime}min)` : ''}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="runtime">Runtime (minutes)</Label>
+                      <Input
+                        id="runtime"
+                        type="number"
+                        placeholder="120"
+                        value={nlpForm.runtime}
+                        onChange={(e) => setNlpForm(prev => ({ ...prev, runtime: e.target.value }))}
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="review-text">Review Text</Label>
+                      <Textarea
+                        id="review-text"
+                        placeholder="Paste movie review here..."
+                        className="min-h-[200px]"
+                        value={nlpForm.reviewText}
+                        onChange={(e) => setNlpForm(prev => ({ ...prev, reviewText: e.target.value }))}
+                      />
+                    </div>
+
+                    <Button 
+                      onClick={handleProcessNlp} 
+                      disabled={processingNlp}
+                      className="w-full"
+                    >
+                      {processingNlp ? 'Processing...' : 'Process with AI'}
+                    </Button>
+                  </CardContent>
+                </Card>
+
+                <Card className="border-border bg-card">
+                  <CardHeader>
+                    <CardTitle>Aggregate Emotion Graphs</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <p className="text-sm text-muted-foreground">
+                      Combine multiple emotion graphs (live reactions, manual reviews, NLP) into consensus graphs for each movie.
+                    </p>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="agg-movie-select">Aggregate Specific Movie (Optional)</Label>
+                      <Select 
+                        onValueChange={(value) => handleAggregateGraphs(value)}
+                        disabled={aggregating}
+                      >
+                        <SelectTrigger id="agg-movie-select">
+                          <SelectValue placeholder="Choose a movie to aggregate" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {movies.map(movie => (
+                            <SelectItem key={movie.id} value={movie.id}>
+                              {movie.title}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="relative">
+                      <div className="absolute inset-0 flex items-center">
+                        <span className="w-full border-t" />
+                      </div>
+                      <div className="relative flex justify-center text-xs uppercase">
+                        <span className="bg-card px-2 text-muted-foreground">Or</span>
+                      </div>
+                    </div>
+
+                    <Button 
+                      onClick={() => handleAggregateGraphs()} 
+                      disabled={aggregating}
+                      variant="secondary"
+                      className="w-full"
+                    >
+                      {aggregating ? 'Aggregating All...' : 'Aggregate All Movies'}
+                    </Button>
+
+                    <p className="text-xs text-muted-foreground">
+                      Note: Batch aggregation may take several minutes depending on the number of movies.
+                    </p>
+                  </CardContent>
+                </Card>
+              </div>
             </TabsContent>
 
             <TabsContent value="users">
