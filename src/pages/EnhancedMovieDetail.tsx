@@ -153,15 +153,21 @@ const EnhancedMovieDetail = () => {
     { time: 100, consensus: 9.5, personal: 9.8, nlp: 9.3 },
   ];
 
-  // Prepare emotion layers from database
+  // Prepare emotion layers from database with proper data mapping
   const emotionLayers = [
     {
       id: 'consensus',
       label: 'Consensus',
       data: graphs
-        .filter(g => g.source_type === 'aggregated')
-        .flatMap(g => g.graph_data || []),
-      color: 'hsl(var(--primary))',
+        .filter(g => g.source_type === 'consensus')
+        .flatMap(g => {
+          const graphData = g.graph_data as any[];
+          return graphData.map((point: any) => ({
+            t_offset: point.time,
+            score: point.value
+          }));
+        }),
+      color: '#3b82f6',
       enabled: true,
     },
     {
@@ -169,7 +175,13 @@ const EnhancedMovieDetail = () => {
       label: 'My Reactions',
       data: graphs
         .filter(g => g.source_type === 'live_reaction' && g.user_id === user?.id)
-        .flatMap(g => g.graph_data || []),
+        .flatMap(g => {
+          const graphData = g.graph_data as any[];
+          return graphData.map((point: any) => ({
+            t_offset: point.time,
+            score: point.value
+          }));
+        }),
       color: '#22c55e',
       enabled: true,
     },
@@ -178,18 +190,30 @@ const EnhancedMovieDetail = () => {
       label: 'NLP Analysis',
       data: graphs
         .filter(g => g.source_type === 'nlp_analysis')
-        .flatMap(g => g.graph_data || []),
+        .flatMap(g => {
+          const graphData = g.graph_data as any[];
+          return graphData.map((point: any) => ({
+            t_offset: point.time,
+            score: point.value
+          }));
+        }),
       color: '#f59e0b',
-      enabled: false,
+      enabled: true,
     },
     {
       id: 'manual',
       label: 'Manual Reviews',
       data: graphs
         .filter(g => g.source_type === 'manual_review')
-        .flatMap(g => g.graph_data || []),
-      color: '#8b5cf6',
-      enabled: false,
+        .flatMap(g => {
+          const graphData = g.graph_data as any[];
+          return graphData.map((point: any) => ({
+            t_offset: point.time,
+            score: point.value
+          }));
+        }),
+      color: '#a855f7',
+      enabled: true,
     },
   ];
 

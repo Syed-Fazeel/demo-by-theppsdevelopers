@@ -216,13 +216,18 @@ const EmotionTimelineGraph = ({
             <defs>
               {layers.map(layer => (
                 <linearGradient key={layer.id} id={`gradient-${layer.id}`} x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor={layer.color} stopOpacity={0.3} />
-                  <stop offset="95%" stopColor={layer.color} stopOpacity={0} />
+                  <stop offset="5%" stopColor={layer.color} stopOpacity={0.5} />
+                  <stop offset="95%" stopColor={layer.color} stopOpacity={0.05} />
                 </linearGradient>
               ))}
             </defs>
             
-            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
+            <CartesianGrid 
+              strokeDasharray="3 3" 
+              stroke="hsl(var(--border))" 
+              opacity={0.2}
+              vertical={false}
+            />
             
             <XAxis
               dataKey="t_offset"
@@ -263,8 +268,9 @@ const EmotionTimelineGraph = ({
       )}
 
       {hasData && (
-        <div className="mt-4 pt-4 border-t border-border">
-          <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
+        <div className="mt-6 pt-4 border-t border-border">
+          <h4 className="text-sm font-semibold mb-3 text-foreground">Emotion Statistics</h4>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             {layers.map(layer => {
               if (!visibleLayers[layer.id] || !layer.data.length) return null;
               
@@ -274,16 +280,32 @@ const EmotionTimelineGraph = ({
               const min = Math.min(...scores);
 
               return (
-                <div key={layer.id} className="flex items-center gap-2">
-                  <div 
-                    className="w-3 h-3 rounded-full" 
-                    style={{ backgroundColor: layer.color }}
-                  />
-                  <span>{layer.label}:</span>
-                  <span className="font-semibold text-foreground">
-                    Avg {avg.toFixed(1)} · Max {max.toFixed(1)} · Min {min.toFixed(1)}
-                  </span>
-                </div>
+                <Card key={layer.id} className="p-4 bg-card/50 border-border">
+                  <div className="flex items-center gap-2 mb-3">
+                    <div 
+                      className="w-4 h-4 rounded-full" 
+                      style={{ 
+                        backgroundColor: layer.color,
+                        boxShadow: `0 0 0 2px hsl(var(--background)), 0 0 0 4px ${layer.color}`
+                      }}
+                    />
+                    <span className="font-semibold text-sm text-foreground">{layer.label}</span>
+                  </div>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Average:</span>
+                      <span className="font-bold text-foreground">{avg.toFixed(1)}/10</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Peak:</span>
+                      <span className="font-semibold" style={{ color: layer.color }}>{max.toFixed(1)}/10</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Low:</span>
+                      <span className="font-semibold text-muted-foreground">{min.toFixed(1)}/10</span>
+                    </div>
+                  </div>
+                </Card>
               );
             })}
           </div>
