@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { Search, Filter, BookmarkPlus } from "lucide-react";
+import { Search, BookmarkPlus } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -10,6 +10,15 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { AddToCollectionDialog } from "@/components/AddToCollectionDialog";
+import { MovieFilters, FilterState } from "@/components/MovieFilters";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { MobileNav } from "@/components/MobileNav";
 
 interface Movie {
   id: string;
@@ -25,6 +34,14 @@ const EnhancedCatalog = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedMovie, setSelectedMovie] = useState<{ id: string; title: string } | null>(null);
+  const [sortBy, setSortBy] = useState("rating");
+  const [filters, setFilters] = useState<FilterState>({
+    genres: [],
+    yearRange: [1950, 2024],
+    ratingRange: [0, 10],
+    director: "",
+    cast: ""
+  });
   const { user } = useAuth();
   const { toast } = useToast();
 
@@ -34,10 +51,43 @@ const EnhancedCatalog = () => {
 
   const fetchMovies = async () => {
     try {
-      const { data, error } = await supabase
-        .from('movies')
-        .select('*')
-        .order('rating', { ascending: false });
+      let query = supabase.from('movies').select('*');
+
+      // Apply genre filters
+      if (filters.genres.length > 0) {
+        query = query.overlaps('genres', filters.genres);
+      }
+
+      // Apply year range filter
+      if (filters.yearRange[0] !== 1950 || filters.yearRange[1] !== 2024) {
+        query = query.gte('year', filters.yearRange[0]).lte('year', filters.yearRange[1]);
+      }
+
+      // Apply rating filter
+      if (filters.ratingRange[0] !== 0 || filters.ratingRange[1] !== 10) {
+        query = query.gte('rating', filters.ratingRange[0]).lte('rating', filters.ratingRange[1]);
+      }
+
+      // Apply director filter
+      if (filters.director) {
+        query = query.ilike('director', `%${filters.director}%`);
+      }
+
+      // Apply cast filter
+      if (filters.cast) {
+        query = query.overlaps('cast_members', [filters.cast]);
+      }
+
+      // Apply sorting
+      if (sortBy === "rating") {
+        query = query.order('rating', { ascending: false });
+      } else if (sortBy === "year") {
+        query = query.order('year', { ascending: false });
+      } else if (sortBy === "title") {
+        query = query.order('title', { ascending: true });
+      }
+
+      const { data, error } = await query;
 
       if (error) throw error;
 
@@ -53,6 +103,10 @@ const EnhancedCatalog = () => {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchMovies();
+  }, [filters, sortBy]);
 
   const filteredMovies = movies.filter((movie) =>
     movie.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -85,8 +139,8 @@ const EnhancedCatalog = () => {
           <h1 className="text-4xl font-bold mb-2">Movie Catalog</h1>
           <p className="text-muted-foreground mb-6">Explore emotion timelines for your favorite films</p>
           
-          <div className="flex gap-4 max-w-2xl">
-            <div className="relative flex-1">
+          <div className="flex flex-col sm:flex-row gap-4">
+            <div className="relative flex-1 max-w-2xl">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
               <Input
                 placeholder="Search movies by title or genre..."
@@ -95,9 +149,19 @@ const EnhancedCatalog = () => {
                 className="pl-10"
               />
             </div>
-            <Button variant="outline" size="icon">
-              <Filter className="h-4 w-4" />
-            </Button>
+            <div className="flex gap-2">
+              <Select value={sortBy} onValueChange={setSortBy}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Sort by" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="rating">Highest Rated</SelectItem>
+                  <SelectItem value="year">Newest</SelectItem>
+                  <SelectItem value="title">Title (A-Z)</SelectItem>
+                </SelectContent>
+              </Select>
+              <MovieFilters onFiltersChange={setFilters} activeFilters={filters} />
+            </div>
           </div>
         </div>
 
