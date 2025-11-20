@@ -5,8 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
 import Header from "@/components/Header";
+import EmotionTimelineGraph from "@/components/EmotionTimelineGraph";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
@@ -19,11 +19,6 @@ const EnhancedMovieDetail = () => {
   const [movie, setMovie] = useState<any>(null);
   const [graphs, setGraphs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeGraphs, setActiveGraphs] = useState({
-    consensus: true,
-    personal: true,
-    nlp: false,
-  });
 
   useEffect(() => {
     if (id) {
@@ -120,7 +115,7 @@ const EnhancedMovieDetail = () => {
     );
   }
 
-  // Create sample graph data
+  // Create sample graph data (for demo - will be replaced by real data)
   const mockGraphData = [
     { time: 0, consensus: 6.5, personal: 7.0, nlp: 6.2 },
     { time: 10, consensus: 7.2, personal: 7.5, nlp: 6.8 },
@@ -133,6 +128,46 @@ const EnhancedMovieDetail = () => {
     { time: 80, consensus: 9.2, personal: 9.5, nlp: 9.0 },
     { time: 90, consensus: 8.5, personal: 8.8, nlp: 8.7 },
     { time: 100, consensus: 9.5, personal: 9.8, nlp: 9.3 },
+  ];
+
+  // Prepare emotion layers from database
+  const emotionLayers = [
+    {
+      id: 'consensus',
+      label: 'Consensus',
+      data: graphs
+        .filter(g => g.source_type === 'aggregated')
+        .flatMap(g => g.graph_data || []),
+      color: 'hsl(var(--primary))',
+      enabled: true,
+    },
+    {
+      id: 'personal',
+      label: 'My Reactions',
+      data: graphs
+        .filter(g => g.source_type === 'live_reaction' && g.user_id === user?.id)
+        .flatMap(g => g.graph_data || []),
+      color: '#22c55e',
+      enabled: true,
+    },
+    {
+      id: 'nlp',
+      label: 'NLP Analysis',
+      data: graphs
+        .filter(g => g.source_type === 'nlp_analysis')
+        .flatMap(g => g.graph_data || []),
+      color: '#f59e0b',
+      enabled: false,
+    },
+    {
+      id: 'manual',
+      label: 'Manual Reviews',
+      data: graphs
+        .filter(g => g.source_type === 'manual_review')
+        .flatMap(g => g.graph_data || []),
+      color: '#8b5cf6',
+      enabled: false,
+    },
   ];
 
   return (
@@ -225,108 +260,15 @@ const EnhancedMovieDetail = () => {
             <p className="text-muted-foreground">
               Track the emotional journey throughout the movie
             </p>
-            
-            <div className="flex gap-4 flex-wrap mt-4">
-              <Button
-                variant={activeGraphs.consensus ? "default" : "outline"}
-                size="sm"
-                onClick={() => setActiveGraphs({...activeGraphs, consensus: !activeGraphs.consensus})}
-              >
-                Consensus
-              </Button>
-              <Button
-                variant={activeGraphs.personal ? "default" : "outline"}
-                size="sm"
-                onClick={() => setActiveGraphs({...activeGraphs, personal: !activeGraphs.personal})}
-                disabled={!user}
-              >
-                Personal
-              </Button>
-              <Button
-                variant={activeGraphs.nlp ? "default" : "outline"}
-                size="sm"
-                onClick={() => setActiveGraphs({...activeGraphs, nlp: !activeGraphs.nlp})}
-              >
-                NLP Analysis
-              </Button>
-            </div>
           </CardHeader>
           <CardContent>
-            <div className="h-[400px] w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={mockGraphData}>
-                  <defs>
-                    <linearGradient id="consensusGradient" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="hsl(var(--emotion-positive))" stopOpacity={0.3} />
-                      <stop offset="95%" stopColor="hsl(var(--emotion-positive))" stopOpacity={0} />
-                    </linearGradient>
-                    <linearGradient id="personalGradient" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="hsl(var(--accent))" stopOpacity={0.3} />
-                      <stop offset="95%" stopColor="hsl(var(--accent))" stopOpacity={0} />
-                    </linearGradient>
-                    <linearGradient id="nlpGradient" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="hsl(var(--emotion-neutral))" stopOpacity={0.3} />
-                      <stop offset="95%" stopColor="hsl(var(--emotion-neutral))" stopOpacity={0} />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                  <XAxis
-                    dataKey="time"
-                    stroke="hsl(var(--muted-foreground))"
-                    label={{ value: 'Time (%)', position: 'insideBottom', offset: -5 }}
-                  />
-                  <YAxis
-                    stroke="hsl(var(--muted-foreground))"
-                    domain={[0, 10]}
-                    label={{ value: 'Emotion Score', angle: -90, position: 'insideLeft' }}
-                  />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: 'hsl(var(--card))',
-                      border: '1px solid hsl(var(--border))',
-                      borderRadius: '8px',
-                    }}
-                  />
-                  <Legend />
-                  {activeGraphs.consensus && (
-                    <Area
-                      type="monotone"
-                      dataKey="consensus"
-                      stroke="hsl(var(--emotion-positive))"
-                      strokeWidth={3}
-                      fill="url(#consensusGradient)"
-                      name="Consensus"
-                    />
-                  )}
-                  {activeGraphs.personal && user && (
-                    <Area
-                      type="monotone"
-                      dataKey="personal"
-                      stroke="hsl(var(--accent))"
-                      strokeWidth={3}
-                      fill="url(#personalGradient)"
-                      name="Personal"
-                    />
-                  )}
-                  {activeGraphs.nlp && (
-                    <Area
-                      type="monotone"
-                      dataKey="nlp"
-                      stroke="hsl(var(--emotion-neutral))"
-                      strokeWidth={3}
-                      fill="url(#nlpGradient)"
-                      name="NLP Analysis"
-                    />
-                  )}
-                </AreaChart>
-              </ResponsiveContainer>
-            </div>
-
-            <div className="mt-6 flex items-center justify-between">
-              <div className="text-sm text-muted-foreground">
-                Based on {graphs.length} user reactions
-              </div>
-            </div>
+            <EmotionTimelineGraph
+              title={`${movie.title} - Emotion Timeline`}
+              runtime={movie.runtime}
+              height={400}
+              layers={emotionLayers}
+              showControls={true}
+            />
           </CardContent>
         </Card>
 
