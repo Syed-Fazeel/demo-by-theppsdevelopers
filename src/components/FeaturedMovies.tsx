@@ -4,6 +4,7 @@ import { Card } from "@/components/ui/card";
 import { Link } from "react-router-dom";
 import { Star } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { MiniEmotionGraph } from "./MiniEmotionGraph";
 
 export const FeaturedMovies = () => {
   const [featured, setFeatured] = useState<any[]>([]);
@@ -68,6 +69,7 @@ export const FeaturedMovies = () => {
               <div className="p-4 space-y-2">
                 <h3 className="font-semibold line-clamp-1">{movie.title}</h3>
                 <p className="text-sm text-muted-foreground">{movie.year}</p>
+                <MiniEmotionGraph movieId={movie.id} />
               </div>
             </Card>
           </Link>

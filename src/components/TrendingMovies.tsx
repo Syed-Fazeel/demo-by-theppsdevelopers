@@ -4,6 +4,7 @@ import { Card } from "@/components/ui/card";
 import { Link } from "react-router-dom";
 import { TrendingUp } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { MiniEmotionGraph } from "./MiniEmotionGraph";
 
 export const TrendingMovies = () => {
   const [trending, setTrending] = useState<any[]>([]);
@@ -89,7 +90,10 @@ export const TrendingMovies = () => {
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-3">
-                  <p className="text-white text-sm font-semibold line-clamp-2">{movie.title}</p>
+                  <div className="w-full space-y-2">
+                    <p className="text-white text-sm font-semibold line-clamp-2">{movie.title}</p>
+                    <MiniEmotionGraph movieId={movie.id} />
+                  </div>
                 </div>
               </div>
             </Card>

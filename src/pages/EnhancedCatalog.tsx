@@ -19,6 +19,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { MobileNav } from "@/components/MobileNav";
+import { MiniEmotionGraph } from "@/components/MiniEmotionGraph";
 
 interface Movie {
   id: string;
@@ -218,8 +219,9 @@ const EnhancedCatalog = () => {
                       <Badge variant="secondary">{movie.genres[0]}</Badge>
                     )}
                   </div>
+                  <MiniEmotionGraph movieId={movie.id} />
                   {movie.rating && (
-                    <div className="flex items-center gap-2 mb-3">
+                    <div className="flex items-center gap-2 mb-3 mt-2">
                       <div className="flex-1 h-2 bg-secondary rounded-full overflow-hidden">
                         <div
                           className="h-full bg-gradient-emotion-warm rounded-full"
