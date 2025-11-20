@@ -1,12 +1,16 @@
 import { useState, useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
-import { ArrowLeft, Play, PenSquare, Heart, MessageCircle, Share2 } from "lucide-react";
+import { ArrowLeft, Play, PenSquare, Heart, MessageCircle, Share2, User } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Header from "@/components/Header";
 import EmotionTimelineGraph from "@/components/EmotionTimelineGraph";
+import { CommentsSection } from "@/components/CommentsSection";
+import { LikeButton } from "@/components/LikeButton";
+import { ShareButton } from "@/components/ShareButton";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
@@ -18,6 +22,7 @@ const EnhancedMovieDetail = () => {
   const { toast } = useToast();
   const [movie, setMovie] = useState<any>(null);
   const [graphs, setGraphs] = useState<any[]>([]);
+  const [reviews, setReviews] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -45,8 +50,25 @@ const EnhancedMovieDetail = () => {
 
       if (graphsError) throw graphsError;
 
+      const { data: reviewsData, error: reviewsError } = await supabase
+        .from('manual_reviews')
+        .select(`
+          *,
+          profiles (
+            display_name,
+            avatar_url
+          )
+        `)
+        .eq('movie_id', id)
+        .eq('moderation_status', 'approved')
+        .eq('is_public', true)
+        .order('created_at', { ascending: false });
+
+      if (reviewsError) throw reviewsError;
+
       setMovie(movieData);
       setGraphs(graphsData || []);
+      setReviews(reviewsData || []);
     } catch (error) {
       console.error('Error fetching movie:', error);
       toast({
@@ -244,12 +266,7 @@ const EnhancedMovieDetail = () => {
                 <PenSquare className="h-4 w-4" />
                 Add Manual Review
               </Button>
-              <Button variant="outline" size="icon">
-                <Heart className="h-4 w-4" />
-              </Button>
-              <Button variant="outline" size="icon">
-                <Share2 className="h-4 w-4" />
-              </Button>
+              <ShareButton movieId={id!} movieTitle={movie.title} />
             </div>
           </div>
         </div>
@@ -278,16 +295,71 @@ const EnhancedMovieDetail = () => {
             <TabsTrigger value="comments">Comments</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="reviews" className="mt-6">
-            <div className="text-center py-12 text-muted-foreground">
-              No reviews yet. Be the first to add one!
+          <TabsContent value="reviews" className="mt-6 space-y-6">
+            <div className="flex items-center justify-between">
+              <h3 className="text-xl font-semibold">User Reviews ({reviews.length})</h3>
+              <Button onClick={handleAddReview}>
+                <PenSquare className="h-4 w-4 mr-2" />
+                Write Review
+              </Button>
             </div>
+            
+            {reviews.length === 0 ? (
+              <div className="text-center py-12 bg-secondary/30 rounded-lg">
+                <MessageCircle className="h-12 w-12 mx-auto mb-4 text-muted-foreground/50" />
+                <p className="text-muted-foreground mb-4">No reviews yet. Be the first to review!</p>
+                <Button onClick={handleAddReview} variant="outline">
+                  <PenSquare className="h-4 w-4 mr-2" />
+                  Write First Review
+                </Button>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {reviews.map((review) => (
+                  <Card key={review.id}>
+                    <CardHeader>
+                      <div className="flex items-start justify-between">
+                        <div className="flex items-center gap-3">
+                          <Avatar>
+                            <AvatarImage src={review.profiles?.avatar_url} />
+                            <AvatarFallback>
+                              <User className="h-4 w-4" />
+                            </AvatarFallback>
+                          </Avatar>
+                          <div>
+                            <p className="font-semibold">{review.profiles?.display_name || "Anonymous"}</p>
+                            <p className="text-sm text-muted-foreground">
+                              {new Date(review.created_at).toLocaleDateString()}
+                            </p>
+                          </div>
+                        </div>
+                        {review.overall_rating && (
+                          <Badge variant="secondary" className="text-lg">
+                            ⭐ {review.overall_rating}/10
+                          </Badge>
+                        )}
+                      </div>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      {review.review_text && (
+                        <p className="text-foreground leading-relaxed">{review.review_text}</p>
+                      )}
+                      <div className="flex items-center gap-4 pt-2 border-t">
+                        <LikeButton reviewId={review.id} />
+                        <Button variant="ghost" size="sm" className="gap-2">
+                          <MessageCircle className="h-4 w-4" />
+                          Reply
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
           </TabsContent>
 
           <TabsContent value="comments" className="mt-6">
-            <div className="text-center py-12 text-muted-foreground">
-              No comments yet. Start the conversation!
-            </div>
+            <CommentsSection graphId={graphs[0]?.id} />
           </TabsContent>
         </Tabs>
       </main>

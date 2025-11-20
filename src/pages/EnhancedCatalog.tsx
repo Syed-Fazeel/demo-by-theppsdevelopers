@@ -141,13 +141,21 @@ const EnhancedCatalog = () => {
           
           <div className="flex flex-col sm:flex-row gap-4">
             <div className="relative flex-1 max-w-2xl">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-5 w-5" />
               <Input
                 placeholder="Search movies by title or genre..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
+                className="pl-10 pr-10 h-12 text-base border-2 focus:border-primary"
               />
+              {searchTerm && (
+                <button
+                  onClick={() => setSearchTerm("")}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                >
+                  ✕
+                </button>
+              )}
             </div>
             <div className="flex gap-2">
               <Select value={sortBy} onValueChange={setSortBy}>
@@ -163,12 +171,28 @@ const EnhancedCatalog = () => {
               <MovieFilters onFiltersChange={setFilters} activeFilters={filters} />
             </div>
           </div>
+          
+          {searchTerm && (
+            <div className="mt-4 text-sm text-muted-foreground">
+              Showing {filteredMovies.length} of {movies.length} movies
+            </div>
+          )}
         </div>
 
         {filteredMovies.length === 0 ? (
-          <div className="text-center py-12">
-            <p className="text-muted-foreground text-lg">No movies found</p>
-            <p className="text-muted-foreground">Try adjusting your search</p>
+          <div className="text-center py-16">
+            <Search className="h-16 w-16 mx-auto mb-4 text-muted-foreground/50" />
+            <p className="text-muted-foreground text-lg mb-2">No movies found</p>
+            <p className="text-muted-foreground mb-4">
+              {searchTerm 
+                ? `No results for "${searchTerm}"`
+                : "Try adjusting your filters"}
+            </p>
+            {searchTerm && (
+              <Button variant="outline" onClick={() => setSearchTerm("")}>
+                Clear Search
+              </Button>
+            )}
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
