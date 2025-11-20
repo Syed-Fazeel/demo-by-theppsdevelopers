@@ -429,6 +429,7 @@ export type Database = {
           cast_members: string[] | null
           created_at: string
           director: string | null
+          featured: boolean | null
           genres: string[] | null
           id: string
           poster_url: string | null
@@ -446,6 +447,7 @@ export type Database = {
           cast_members?: string[] | null
           created_at?: string
           director?: string | null
+          featured?: boolean | null
           genres?: string[] | null
           id?: string
           poster_url?: string | null
@@ -463,6 +465,7 @@ export type Database = {
           cast_members?: string[] | null
           created_at?: string
           director?: string | null
+          featured?: boolean | null
           genres?: string[] | null
           id?: string
           poster_url?: string | null
@@ -525,6 +528,7 @@ export type Database = {
           created_at: string
           display_name: string | null
           id: string
+          onboarding_completed: boolean | null
           updated_at: string
         }
         Insert: {
@@ -533,6 +537,7 @@ export type Database = {
           created_at?: string
           display_name?: string | null
           id: string
+          onboarding_completed?: boolean | null
           updated_at?: string
         }
         Update: {
@@ -541,7 +546,41 @@ export type Database = {
           created_at?: string
           display_name?: string | null
           id?: string
+          onboarding_completed?: boolean | null
           updated_at?: string
+        }
+        Relationships: []
+      }
+      user_notification_preferences: {
+        Row: {
+          comment_notifications: boolean | null
+          created_at: string | null
+          email_notifications: boolean | null
+          follow_notifications: boolean | null
+          id: string
+          like_notifications: boolean | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          comment_notifications?: boolean | null
+          created_at?: string | null
+          email_notifications?: boolean | null
+          follow_notifications?: boolean | null
+          id?: string
+          like_notifications?: boolean | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          comment_notifications?: boolean | null
+          created_at?: string | null
+          email_notifications?: boolean | null
+          follow_notifications?: boolean | null
+          id?: string
+          like_notifications?: boolean | null
+          updated_at?: string | null
+          user_id?: string
         }
         Relationships: []
       }
