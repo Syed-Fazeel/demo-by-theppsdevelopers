@@ -14,6 +14,7 @@ const Auth = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [displayName, setDisplayName] = useState("");
+  const [selectedRole, setSelectedRole] = useState<"admin" | "user" | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -95,6 +96,15 @@ const Auth = () => {
       return;
     }
 
+    if (!selectedRole) {
+      toast({
+        title: "Error",
+        description: "Please select Admin or User login",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsLoading(true);
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
@@ -113,13 +123,30 @@ const Auth = () => {
       // Check if user is admin
       const isAdmin = await checkUserRole(data.user.id);
       
+      // Validate selected role against actual role
+      if (selectedRole === "admin" && !isAdmin) {
+        toast({
+          title: "Access Denied",
+          description: "You don't have admin privileges",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      if (selectedRole === "user" && isAdmin) {
+        toast({
+          title: "Note",
+          description: "You have admin privileges. Use Admin Login to access admin features.",
+        });
+      }
+      
       toast({
         title: "Success!",
         description: isAdmin ? "Logged in as Admin" : "Logged in successfully",
       });
       
       // Redirect based on role
-      if (isAdmin) {
+      if (isAdmin && selectedRole === "admin") {
         navigate("/admin");
       } else {
         navigate("/");
@@ -152,14 +179,28 @@ const Auth = () => {
 
               <TabsContent value="signin">
                 <div className="grid grid-cols-2 gap-3 mb-4">
-                  <Card className="border-border bg-secondary/50 cursor-pointer hover:bg-secondary/70 transition-colors">
+                  <Card 
+                    className={`border-2 cursor-pointer transition-all ${
+                      selectedRole === "admin" 
+                        ? "border-primary bg-primary/10" 
+                        : "border-border bg-secondary/50 hover:bg-secondary/70"
+                    }`}
+                    onClick={() => setSelectedRole("admin")}
+                  >
                     <CardContent className="p-4 text-center">
                       <Shield className="h-6 w-6 mx-auto mb-2 text-primary" />
                       <p className="text-sm font-semibold">Admin Login</p>
                       <p className="text-xs text-muted-foreground mt-1">Access admin dashboard</p>
                     </CardContent>
                   </Card>
-                  <Card className="border-border bg-secondary/50 cursor-pointer hover:bg-secondary/70 transition-colors">
+                  <Card 
+                    className={`border-2 cursor-pointer transition-all ${
+                      selectedRole === "user" 
+                        ? "border-primary bg-primary/10" 
+                        : "border-border bg-secondary/50 hover:bg-secondary/70"
+                    }`}
+                    onClick={() => setSelectedRole("user")}
+                  >
                     <CardContent className="p-4 text-center">
                       <User className="h-6 w-6 mx-auto mb-2 text-primary" />
                       <p className="text-sm font-semibold">User Login</p>
@@ -167,9 +208,15 @@ const Auth = () => {
                     </CardContent>
                   </Card>
                 </div>
-                <p className="text-xs text-muted-foreground text-center mb-4">
-                  Use your credentials below - you'll be redirected based on your role
-                </p>
+                {selectedRole ? (
+                  <p className="text-xs text-primary text-center mb-4 font-medium">
+                    Logging in as {selectedRole === "admin" ? "Admin" : "User"}
+                  </p>
+                ) : (
+                  <p className="text-xs text-muted-foreground text-center mb-4">
+                    Select admin or user login above
+                  </p>
+                )}
                 <form onSubmit={handleSignIn} className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="signin-email">Email</Label>
