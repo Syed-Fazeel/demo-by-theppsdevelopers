@@ -1,4 +1,4 @@
-import { Film, User, LogOut, Heart, Settings, LayoutDashboard, Plus } from "lucide-react";
+import { Film, User, LogOut, Heart, Settings, LayoutDashboard, Plus, TrendingUp } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "./ui/button";
 import {
@@ -13,6 +13,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { NotificationBell } from "./NotificationBell";
 
 const Header = () => {
   const { user, signOut } = useAuth();
@@ -65,9 +66,14 @@ const Header = () => {
             
             {user ? (
               <>
+                <Link to="/feed" className="text-foreground hover:text-primary transition-colors hidden md:inline flex items-center gap-2">
+                  <TrendingUp className="h-4 w-4" />
+                  Feed
+                </Link>
                 <Link to="/my-collections" className="text-foreground hover:text-primary transition-colors hidden md:inline">
                   Collections
                 </Link>
+                <NotificationBell />
                 
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>

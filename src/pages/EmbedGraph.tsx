@@ -58,9 +58,11 @@ const EmbedGraph = () => {
 
   const layers = [
     {
-      name: graph.profiles?.display_name || "User",
+      id: graph.id,
+      label: graph.profiles?.display_name || "User",
       data: graph.graph_data,
       color: "hsl(var(--primary))",
+      enabled: true,
     },
   ];
 
@@ -76,7 +78,7 @@ const EmbedGraph = () => {
         
         <EmotionTimelineGraph
           layers={layers}
-          movieTitle={movie?.title || "Movie"}
+          title={movie?.title || "Movie"}
           height={400}
         />
 
