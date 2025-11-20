@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Film } from "lucide-react";
+import { Film, Shield, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -69,6 +69,21 @@ const Auth = () => {
     }
   };
 
+  const checkUserRole = async (userId: string) => {
+    const { data, error } = await supabase
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', userId)
+      .in('role', ['admin', 'moderator']);
+    
+    if (error) {
+      console.error('Error checking user role:', error);
+      return false;
+    }
+    
+    return data && data.length > 0;
+  };
+
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !password) {
@@ -81,7 +96,7 @@ const Auth = () => {
     }
 
     setIsLoading(true);
-    const { error } = await supabase.auth.signInWithPassword({
+    const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
@@ -94,8 +109,21 @@ const Auth = () => {
         description: error.message,
         variant: "destructive",
       });
-    } else {
-      navigate("/");
+    } else if (data.user) {
+      // Check if user is admin
+      const isAdmin = await checkUserRole(data.user.id);
+      
+      toast({
+        title: "Success!",
+        description: isAdmin ? "Logged in as Admin" : "Logged in successfully",
+      });
+      
+      // Redirect based on role
+      if (isAdmin) {
+        navigate("/admin");
+      } else {
+        navigate("/");
+      }
     }
   };
 
@@ -123,6 +151,25 @@ const Auth = () => {
               </TabsList>
 
               <TabsContent value="signin">
+                <div className="grid grid-cols-2 gap-3 mb-4">
+                  <Card className="border-border bg-secondary/50 cursor-pointer hover:bg-secondary/70 transition-colors">
+                    <CardContent className="p-4 text-center">
+                      <Shield className="h-6 w-6 mx-auto mb-2 text-primary" />
+                      <p className="text-sm font-semibold">Admin Login</p>
+                      <p className="text-xs text-muted-foreground mt-1">Access admin dashboard</p>
+                    </CardContent>
+                  </Card>
+                  <Card className="border-border bg-secondary/50 cursor-pointer hover:bg-secondary/70 transition-colors">
+                    <CardContent className="p-4 text-center">
+                      <User className="h-6 w-6 mx-auto mb-2 text-primary" />
+                      <p className="text-sm font-semibold">User Login</p>
+                      <p className="text-xs text-muted-foreground mt-1">Access your account</p>
+                    </CardContent>
+                  </Card>
+                </div>
+                <p className="text-xs text-muted-foreground text-center mb-4">
+                  Use your credentials below - you'll be redirected based on your role
+                </p>
                 <form onSubmit={handleSignIn} className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="signin-email">Email</Label>
