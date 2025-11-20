@@ -128,28 +128,41 @@ const ManualReview = () => {
   };
 
   const generateGraphFromRatings = (ratings: Record<string, number>) => {
-    // Convert section ratings to smooth timeline curve
-    const dataPoints = [];
-    const sectionRanges = {
-      opening: [0, 20],
-      rising_action: [20, 50],
-      climax: [50, 70],
-      falling_action: [70, 90],
-      resolution: [90, 100],
+    // Convert section ratings to timeline with smooth interpolation
+    const sectionTimings = {
+      opening: { start: 0, end: 20 },
+      rising_action: { start: 20, end: 50 },
+      climax: { start: 50, end: 70 },
+      falling_action: { start: 70, end: 90 },
+      resolution: { start: 90, end: 100 },
     };
 
-    Object.entries(sectionRanges).forEach(([section, [start, end]]) => {
-      const value = ratings[section];
-      const steps = Math.floor((end - start) / 5);
-      for (let i = 0; i <= steps; i++) {
-        dataPoints.push({
-          t_offset: start + (i * 5),
-          score: value,
-        });
+    const dataPoints = [];
+    const sectionKeys = Object.keys(sectionTimings) as (keyof typeof sectionTimings)[];
+    
+    for (let i = 0; i < sectionKeys.length; i++) {
+      const section = sectionKeys[i];
+      const score = ratings[section];
+      const timing = sectionTimings[section];
+      
+      // Add multiple points per section for smoother curves
+      const numPoints = 5;
+      for (let j = 0; j < numPoints; j++) {
+        const t = timing.start + (timing.end - timing.start) * (j / (numPoints - 1));
+        
+        // Interpolate with next section for smooth transitions
+        let interpolatedScore = score;
+        if (j === numPoints - 1 && i < sectionKeys.length - 1) {
+          const nextSection = sectionKeys[i + 1];
+          const nextScore = ratings[nextSection];
+          interpolatedScore = (score + nextScore) / 2;
+        }
+        
+        dataPoints.push({ t_offset: Math.round(t * 10) / 10, score: interpolatedScore });
       }
-    });
+    }
 
-    return dataPoints;
+    return dataPoints.sort((a, b) => a.t_offset - b.t_offset);
   };
 
   if (!movie) {
