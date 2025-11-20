@@ -11,6 +11,7 @@ import EmotionTimelineGraph from "@/components/EmotionTimelineGraph";
 import { CommentsSection } from "@/components/CommentsSection";
 import { LikeButton } from "@/components/LikeButton";
 import { ShareButton } from "@/components/ShareButton";
+import { MovieStatsSection } from "@/components/MovieStatsSection";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
@@ -270,6 +271,8 @@ const EnhancedMovieDetail = () => {
             </div>
           </div>
         </div>
+
+        <MovieStatsSection movieId={id!} />
 
         <Card className="border-border bg-card shadow-card mb-8">
           <CardHeader>
