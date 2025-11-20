@@ -11,9 +11,12 @@ import EmotionTimelineGraph from "@/components/EmotionTimelineGraph";
 import { CommentsSection } from "@/components/CommentsSection";
 import { LikeButton } from "@/components/LikeButton";
 import { ShareButton } from "@/components/ShareButton";
+import { TMDbReviewsSection } from "@/components/TMDbReviewsSection";
+import { TMDbMetrics } from "@/components/TMDbMetrics";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+import { useTMDb, TMDbMovieData } from "@/hooks/useTMDb";
 
 const EnhancedMovieDetail = () => {
   const { id } = useParams();
@@ -24,12 +27,27 @@ const EnhancedMovieDetail = () => {
   const [graphs, setGraphs] = useState<any[]>([]);
   const [reviews, setReviews] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [tmdbData, setTmdbData] = useState<TMDbMovieData | null>(null);
+  const [loadingTmdb, setLoadingTmdb] = useState(false);
+  const { fetchMovieDetails } = useTMDb();
 
   useEffect(() => {
     if (id) {
       fetchMovieData();
     }
   }, [id]);
+
+  useEffect(() => {
+    const fetchTMDbData = async () => {
+      if (movie?.tmdb_id) {
+        setLoadingTmdb(true);
+        const data = await fetchMovieDetails(movie.tmdb_id);
+        setTmdbData(data);
+        setLoadingTmdb(false);
+      }
+    };
+    fetchTMDbData();
+  }, [movie?.tmdb_id]);
 
   const fetchMovieData = async () => {
     try {
@@ -268,6 +286,15 @@ const EnhancedMovieDetail = () => {
               </Button>
               <ShareButton movieId={id!} movieTitle={movie.title} />
             </div>
+
+            {/* TMDb Real-time Metrics */}
+            {tmdbData && tmdbData.vote_count && (
+              <TMDbMetrics
+                rating={tmdbData.rating}
+                voteCount={tmdbData.vote_count}
+                popularity={tmdbData.popularity || 0}
+              />
+            )}
           </div>
         </div>
 
@@ -291,7 +318,10 @@ const EnhancedMovieDetail = () => {
 
         <Tabs defaultValue="reviews" className="w-full">
           <TabsList>
-            <TabsTrigger value="reviews">Reviews</TabsTrigger>
+            <TabsTrigger value="reviews">Platform Reviews ({reviews.length})</TabsTrigger>
+            <TabsTrigger value="tmdb-reviews">
+              TMDb Reviews {tmdbData?.tmdb_review_count ? `(${tmdbData.tmdb_review_count})` : ''}
+            </TabsTrigger>
             <TabsTrigger value="comments">Comments</TabsTrigger>
           </TabsList>
 
@@ -358,8 +388,25 @@ const EnhancedMovieDetail = () => {
             )}
           </TabsContent>
 
+          <TabsContent value="tmdb-reviews" className="mt-6">
+            {loadingTmdb ? (
+              <div className="text-center py-8">
+                <p className="text-muted-foreground">Loading TMDb reviews...</p>
+              </div>
+            ) : tmdbData?.tmdb_reviews ? (
+              <TMDbReviewsSection 
+                reviews={tmdbData.tmdb_reviews} 
+                totalCount={tmdbData.tmdb_review_count || 0}
+              />
+            ) : (
+              <div className="text-center py-8">
+                <p className="text-muted-foreground">No TMDb reviews available.</p>
+              </div>
+            )}
+          </TabsContent>
+
           <TabsContent value="comments" className="mt-6">
-            <CommentsSection graphId={graphs[0]?.id} />
+            <CommentsSection movieId={id} />
           </TabsContent>
         </Tabs>
       </main>

@@ -107,6 +107,7 @@ export type Database = {
           moderation_status:
             | Database["public"]["Enums"]["moderation_status"]
             | null
+          movie_id: string | null
           review_id: string | null
           updated_at: string
           user_id: string
@@ -119,6 +120,7 @@ export type Database = {
           moderation_status?:
             | Database["public"]["Enums"]["moderation_status"]
             | null
+          movie_id?: string | null
           review_id?: string | null
           updated_at?: string
           user_id: string
@@ -131,6 +133,7 @@ export type Database = {
           moderation_status?:
             | Database["public"]["Enums"]["moderation_status"]
             | null
+          movie_id?: string | null
           review_id?: string | null
           updated_at?: string
           user_id?: string
@@ -141,6 +144,13 @@ export type Database = {
             columns: ["graph_id"]
             isOneToOne: false
             referencedRelation: "emotion_graphs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "comments_movie_id_fkey"
+            columns: ["movie_id"]
+            isOneToOne: false
+            referencedRelation: "movies"
             referencedColumns: ["id"]
           },
           {
