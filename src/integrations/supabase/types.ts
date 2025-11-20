@@ -628,6 +628,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      generate_sample_emotion_data: {
+        Args: {
+          movie_genres: string[]
+          movie_rating: number
+          movie_runtime: number
+        }
+        Returns: Json
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
