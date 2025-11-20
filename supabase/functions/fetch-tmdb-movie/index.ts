@@ -19,6 +19,8 @@ interface TMDbMovie {
   backdrop_path: string | null;
   genres: Array<{ id: number; name: string }>;
   vote_average: number;
+  vote_count: number;
+  popularity: number;
 }
 
 interface TMDbCredits {
@@ -28,6 +30,26 @@ interface TMDbCredits {
 
 interface TMDbVideos {
   results: Array<{ type: string; site: string; key: string }>;
+}
+
+interface TMDbReview {
+  author: string;
+  author_details: {
+    name: string;
+    username: string;
+    avatar_path: string | null;
+    rating: number | null;
+  };
+  content: string;
+  created_at: string;
+  id: string;
+  updated_at: string;
+  url: string;
+}
+
+interface TMDbReviews {
+  results: TMDbReview[];
+  total_results: number;
 }
 
 serve(async (req) => {
@@ -90,6 +112,11 @@ serve(async (req) => {
       const videosResponse = await fetch(videosUrl);
       const videos: TMDbVideos = await videosResponse.json();
 
+      // Fetch reviews
+      const reviewsUrl = `${TMDB_BASE_URL}/movie/${tmdbId}/reviews?api_key=${TMDB_API_KEY}`;
+      const reviewsResponse = await fetch(reviewsUrl);
+      const reviews: TMDbReviews = await reviewsResponse.json();
+
       // Extract relevant data
       const director = credits.crew.find(person => person.job === 'Director')?.name || null;
       const cast = credits.cast
@@ -115,6 +142,17 @@ serve(async (req) => {
         director: director,
         trailer_url: trailerUrl,
         rating: movie.vote_average,
+        vote_count: movie.vote_count,
+        popularity: movie.popularity,
+        tmdb_reviews: reviews.results.map(r => ({
+          author: r.author_details.name || r.author_details.username || r.author,
+          avatar_url: r.author_details.avatar_path ? `${TMDB_IMAGE_BASE_URL}/w200${r.author_details.avatar_path}` : null,
+          rating: r.author_details.rating,
+          content: r.content,
+          created_at: r.created_at,
+          url: r.url,
+        })),
+        tmdb_review_count: reviews.total_results,
       };
 
       return new Response(

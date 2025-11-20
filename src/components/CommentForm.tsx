@@ -9,10 +9,11 @@ import { Send } from "lucide-react";
 interface CommentFormProps {
   graphId?: string;
   reviewId?: string;
+  movieId?: string;
   onCommentAdded?: () => void;
 }
 
-export const CommentForm = ({ graphId, reviewId, onCommentAdded }: CommentFormProps) => {
+export const CommentForm = ({ graphId, reviewId, movieId, onCommentAdded }: CommentFormProps) => {
   const { user } = useAuth();
   const [content, setContent] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -44,7 +45,8 @@ export const CommentForm = ({ graphId, reviewId, onCommentAdded }: CommentFormPr
           user_id: user.id,
           content: content.trim(),
           graph_id: graphId || null,
-          review_id: reviewId || null
+          review_id: reviewId || null,
+          movie_id: movieId || null
         });
 
       if (error) throw error;

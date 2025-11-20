@@ -9,6 +9,15 @@ export interface TMDbSearchResult {
   overview: string;
 }
 
+export interface TMDbReview {
+  author: string;
+  avatar_url: string | null;
+  rating: number | null;
+  content: string;
+  created_at: string;
+  url: string;
+}
+
 export interface TMDbMovieData {
   tmdb_id: number;
   title: string;
@@ -22,6 +31,10 @@ export interface TMDbMovieData {
   director: string | null;
   trailer_url: string | null;
   rating: number;
+  vote_count?: number;
+  popularity?: number;
+  tmdb_reviews?: TMDbReview[];
+  tmdb_review_count?: number;
 }
 
 export const useTMDb = () => {

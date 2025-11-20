@@ -8,9 +8,10 @@ import { MessageSquare } from "lucide-react";
 interface CommentsSectionProps {
   graphId?: string;
   reviewId?: string;
+  movieId?: string;
 }
 
-export const CommentsSection = ({ graphId, reviewId }: CommentsSectionProps) => {
+export const CommentsSection = ({ graphId, reviewId, movieId }: CommentsSectionProps) => {
   const [comments, setComments] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -19,14 +20,14 @@ export const CommentsSection = ({ graphId, reviewId }: CommentsSectionProps) => 
 
     // Subscribe to real-time updates
     const channel = supabase
-      .channel(`comments-${graphId || reviewId}`)
+      .channel(`comments-${graphId || reviewId || movieId}`)
       .on(
         "postgres_changes",
         {
           event: "*",
           schema: "public",
           table: "comments",
-          filter: graphId ? `graph_id=eq.${graphId}` : `review_id=eq.${reviewId}`
+          filter: graphId ? `graph_id=eq.${graphId}` : reviewId ? `review_id=eq.${reviewId}` : `movie_id=eq.${movieId}`
         },
         () => {
           fetchComments();
@@ -37,7 +38,7 @@ export const CommentsSection = ({ graphId, reviewId }: CommentsSectionProps) => 
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [graphId, reviewId]);
+  }, [graphId, reviewId, movieId]);
 
   const fetchComments = async () => {
     try {
@@ -55,6 +56,7 @@ export const CommentsSection = ({ graphId, reviewId }: CommentsSectionProps) => 
 
       if (graphId) query = query.eq("graph_id", graphId);
       if (reviewId) query = query.eq("review_id", reviewId);
+      if (movieId) query = query.eq("movie_id", movieId);
 
       const { data, error } = await query;
 
@@ -76,9 +78,10 @@ export const CommentsSection = ({ graphId, reviewId }: CommentsSectionProps) => 
         </h3>
       </div>
 
-      <CommentForm
-        graphId={graphId}
+      <CommentForm 
+        graphId={graphId} 
         reviewId={reviewId}
+        movieId={movieId}
         onCommentAdded={fetchComments}
       />
 
